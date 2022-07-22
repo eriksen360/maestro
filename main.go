@@ -1,9 +1,20 @@
 package main
 
-import "maestro/lib"
+import (
+	"maestro/lib"
+)
 
 func main() {
-	lib.Parse()
+
+	/* out, err := exec.Command("ssh", "-i", "/home/mathias/.ssh/bfs_thinkpad",
+		"root@144.76.69.3", "ls").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(out)) */
+
+	lib.ExecuteSingleCommand("144.76.69.3:22")
+
 }
 
 /* Plan
