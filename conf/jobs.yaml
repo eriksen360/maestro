@@ -1,0 +1,23 @@
+tasks:
+
+  update_db:
+
+    user: "root"
+    hosts: ["123.123.123.123"]
+    groups: ["db", "web"]  # Can be used to specify a group where a process is applied to all hosts
+    schedule:  # Can be used to schedule a task to a specific time
+    logs:
+      logging: true
+      logFile: /path/to/log_file
+
+    steps:
+    - name:
+      type: fileTransfer  #fileTransfer / command / healthCheck
+      persistSession: false  # Should the session perform a session.Run(cmd) or session.Start(cmd)
+      command: "cd ~/"
+      dependencies:  # Specify
+        - host: 123.123.123.123
+          task: test-web
+          nameOfStep: Pre-commit hooks
+      retries: 3
+      desiredState: 1 # Dont know what to do with this one

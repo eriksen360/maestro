@@ -1,0 +1,6 @@
+
+hosts:
+
+  server1:
+    pubKey: path/to/key_file.pub
+    groups: ["db"]

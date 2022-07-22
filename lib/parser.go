@@ -1,10 +1,44 @@
 package lib
 
-func ReadConfigurationFile(f string) {
+import (
+	"fmt"
+	"github.com/spf13/viper"
+	"os"
+)
 
-	/* Formats the .yaml into something more computer-like (dicts etc)
+// TODO: make as interface
+func GetConfigurationFileSettings() map[string]interface{} {
 
-	 */
+	viper.SetConfigName("jobs")
+	viper.SetConfigType("yaml")
+
+	pwd, _ := os.Getwd()
+	viper.AddConfigPath(pwd + "/conf")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %w", err))
+	}
+
+	return viper.AllSettings()
+}
+
+// TODO: make as interface
+func Validate(settings map[string]interface{}) (bool, error) {
+
+	return true, nil
+}
+
+// FormatConfigurationFileSettings This function translates the map of settings into a
+// more explicit list, which can be further formatted to provide a concise instruction set
+// for the executor algorithm
+func FormatConfigurationFileSettings(f string) {
+
+	settings := GetConfigurationFileSettings()
+	ok, err := Validate(settings)
+	if !ok {
+		panic(fmt.Errorf("invalid configuration file: %w", err))
+	}
 
 }
 
