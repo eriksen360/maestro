@@ -1,0 +1,35 @@
+
+
+hosts:
+
+  server1.bfs.com:
+    groups: ["db", "robot"]
+    user: "root"
+    tasks:
+
+      taskFromFile: "path/to/file"
+
+    - name: Go to directory
+      type: Command
+      command: cd /home/user/projects
+
+    - name: Deploy service XYZ
+      type: File transfer
+      command: ./deploy_aws_nodes.sh
+      dependencies: [x, y]
+      schedule: 1240320210
+      retries: 3
+      logFile: /path/to/log_file
+      desiredState
+
+  server2.bfs.com:
+  tasks:
+    desiredState: ---
+
+  printer.office.bfs.com:
+
+
+
+
+
+
