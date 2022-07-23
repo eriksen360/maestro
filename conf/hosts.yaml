@@ -2,5 +2,13 @@
 hosts:
 
   server1:
+    fqdn: server1.bfs.com
+    ipAddr: 192.169.14.4
     pubKey: path/to/key_file.pub
     groups: ["db"]
+
+  server2:
+    fqdn: server2.bfs.com
+    ipAddr: 192.168.14.5
+    pubKey: path/to/key_file2.pub
+    groups: [ "db", "web" ]

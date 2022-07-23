@@ -4,8 +4,17 @@ import (
 	"maestro/lib"
 )
 
+func Setup() {
+
+	ok, err := lib.InitializeViper()
+	if !ok {
+		panic(err)
+	}
+}
+
 func main() {
 
+	Setup()
 	/* out, err := exec.Command("ssh", "-i", "/home/mathias/.ssh/bfs_thinkpad",
 		"root@144.76.69.3", "ls").Output()
 	if err != nil {
@@ -13,7 +22,10 @@ func main() {
 	}
 	fmt.Println(string(out)) */
 
-	lib.ExecuteSingleCommand("144.76.69.3:22")
+	// lib.ExecuteSingleCommand("144.76.69.3:22")
+	lib.FormatConfigurationFileSettings()
+
+	// Vi skal have en smart måde at gemme de her Task lister på de er stateful
 
 }
 

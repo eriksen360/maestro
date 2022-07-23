@@ -12,22 +12,47 @@ import (
 )
 
 /*
+ SSH Compression
+ SSH Transport Protocol
+ SSH Channels for parallel connection to same host
 
 
-
- */
+*/
 
 func ConfigureClient() *ssh.Client                       { return nil }
 func EstablishConnection(client *ssh.Client) *ssh.Client { return nil }
-func ParseConfFile(f string) {
-
-	// Should parse a .yaml file and create a set of instructions to be executed
-}
 
 func Orchestrate() {
 
 	/* The brain of everything. Handles all connections and states for those connections. Orchestrates the
-	processes and communication
+	processes and communication.
+
+	Maestro can consume a configuration file without applying it
+
+	*/
+
+	/*
+		while ACTIVE {
+
+			if user.startsProcess(host, task, **kwargs) {
+
+				create go routine
+				Find host and task from saved instruction sets
+
+				If connection for host already open, use new session/channel (Potentiel for regulating bandwidth for each client)
+				Apply instruction set on session. If scheduled, sleep async until ready (close session meanwhile)
+
+				We must at the same time use events and signals to resolve dependencies
+
+				The trick here is not the functionality but high availability, performance and bandwidth.
+				There is plenty of oppurtunity for optimization and gain here if done correctly
+
+			}
+
+
+
+
+		}
 
 
 

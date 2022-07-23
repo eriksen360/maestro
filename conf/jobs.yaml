@@ -4,20 +4,34 @@ tasks:
 
     user: "root"
     hosts: ["123.123.123.123"]
-    groups: ["db", "web"]  # Can be used to specify a group where a process is applied to all hosts
-    schedule:  # Can be used to schedule a task to a specific time
+    groups: ["db"]  # Can be used to specify a group where a process is applied to all hosts
+    schedule: 00 # Can be used to schedule a task to a specific time
+    persistSession: false # Should the session perform a session.Run(cmd) or session.Start(cmd)
     logs:
       logging: true
       logFile: /path/to/log_file
 
-    steps:
-    - name:
-      type: fileTransfer  #fileTransfer / command / healthCheck
-      persistSession: false  # Should the session perform a session.Run(cmd) or session.Start(cmd)
-      command: "cd ~/"
+    instructions:
+    - name: instruction1
+      type: fileTransfer  #fileTransfer / command
+      filesrc: ./local/path
+      filedst: ~/remote/data/path
       dependencies:  # Specify
-        - host: 123.123.123.123
+        - host: "123.123.123.123"
           task: test-web
-          nameOfStep: Pre-commit hooks
+          stepname: "Pre-commit hooks"
+        - host: "123.123.123.123"
+          task: test-web
+          stepname: "Pre-commit hooks"
       retries: 3
-      desiredState: 1 # Dont know what to do with this one
+
+    - name: instruction2
+      type: command
+      command: "./script.sh"
+      retries: 1
+
+  update_web:
+
+    user: "meriksen"
+    hosts: [ "122.123.123.123" ]
+    groups: ["web"]
