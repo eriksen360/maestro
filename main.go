@@ -1,31 +1,23 @@
 package main
 
-import (
-	"maestro/lib"
-)
-
-func Setup() {
-
-	ok, err := lib.InitializeViper()
-	if !ok {
-		panic(err)
-	}
-}
+import "maestro/lib"
 
 func main() {
 
-	Setup()
 	/* out, err := exec.Command("ssh", "-i", "/home/mathias/.ssh/bfs_thinkpad",
 		"root@144.76.69.3", "ls").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(string(out)) */
-
 	// lib.ExecuteSingleCommand("144.76.69.3:22")
-	lib.FormatConfigurationFileSettings()
 
-	// Vi skal have en smart måde at gemme de her Task lister på de er stateful
+	/* ok, err := lib.ParseConfigurationFile("hosts.yaml")
+	if !ok {
+		log.Fatal(err)
+	} */
+
+	lib.Connect()
 
 }
 

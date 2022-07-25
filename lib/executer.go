@@ -34,7 +34,7 @@ func Orchestrate() {
 	/*
 		while ACTIVE {
 
-			if user.startsProcess(host, task, **kwargs) {
+			if user.startsTask(host, task, **kwargs) {
 
 				create go routine
 				Find host and task from saved instruction sets
@@ -59,6 +59,13 @@ func Orchestrate() {
 	*/
 
 }
+
+/* Implement a MsgQueue */
+
+type Handler interface {
+}
+
+func UserInterfaceEventHandle() {}
 
 func ExecuteSingleCommand(ipAddr string) {
 

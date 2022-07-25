@@ -14,15 +14,15 @@ tasks:
     instructions:
     - name: instruction1
       type: fileTransfer  #fileTransfer / command
-      filesrc: ./local/path
-      filedst: ~/remote/data/path
+      file_src: ./local/path
+      file_dst: ~/remote/data/path
       dependencies:  # Specify
         - host: "123.123.123.123"
           task: test-web
-          stepname: "Pre-commit hooks"
+          step_name: "Pre-commit hooks"
         - host: "123.123.123.123"
           task: test-web
-          stepname: "Pre-commit hooks"
+          step_name: "Pre-commit hooks"
       retries: 3
 
     - name: instruction2
