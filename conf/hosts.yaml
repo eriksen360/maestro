@@ -11,7 +11,13 @@ hosts:
     fqdn: server2.bfs.com
     ipAddr: 192.168.14.5
     pubKey: path/to/key_file2.pub
-    groups: [ "db", "web" ]
+    groups: ["web", "admin", "staging"]
+
+  server3:
+    fqdn: mainframe.bfs.com
+    ipAddr: 192.167.14.12
+    pubKey: path/to/key_file3.pub
+    groups: ["web", "db"]
 
 tasks:
 
@@ -19,7 +25,7 @@ tasks:
 
     user: "root"
     hosts: ["123.123.123.123"]
-    groups: ["db"]  # Can be used to specify a group where a process is applied to all hosts
+    groups: ["web"]  # Can be used to specify a group where a process is applied to all hosts
     schedule: 00 # Can be used to schedule a task to a specific time
     persistSession: true # Should the session perform a session.Run(cmd) or session.Start(cmd)
     logs:
@@ -32,7 +38,7 @@ tasks:
         file_src: ./local/path
         file_dst: ~/remote/data/path
         dependencies:  # Specify
-          - host: "123.123.123.123"
+          - host: "123.123.123.122"
             task: test-web
             step_name: "Pre-commit hooks"
           - host: "123.123.123.123"
@@ -48,5 +54,11 @@ tasks:
   update_web:
 
     user: "meriksen"
-    hosts: [ "122.123.123.123" ]
-    groups: ["web"]
+    hosts: [ "192.169.14.4", "192.167.14.12" ]
+    groups: ["web "]
+
+    instructions:
+      - name: instruction1
+        type: command
+        command: "cd repo && docker-compose up -d"
+        retries: 2

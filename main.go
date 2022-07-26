@@ -17,7 +17,11 @@ func main() {
 		log.Fatal(err)
 	} */
 
-	lib.Connect()
+	// todo: test storage.go
+	// todo: test it again
+	// todo: improve data types
+
+	lib.ParseConfigurationFile("hosts.yaml")
 
 }
 
