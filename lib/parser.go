@@ -2,6 +2,7 @@ package lib
 
 import (
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"strconv"
@@ -40,13 +41,12 @@ func ParseConfigurationFile(file string) (bool, error) {
 		log.Fatal(err)
 	}
 
-	var hosts []Host = FormatHostSettingsFromFile(sViper)
-	var tasks []Task = FormatTaskSettingsFromFile(sViper)
-
 	db := Connect()
 	if db == nil {
 		panic("Could not get database")
 	}
+	var hosts []Host = FormatHostSettingsFromFile(sViper)
+	var tasks []Task = FormatTaskSettingsFromFile(db, sViper)
 	SaveConfigurationFile(db, hosts, tasks)
 
 	return true, nil
@@ -61,7 +61,7 @@ func FormatHostSettingsFromFile(sViper *viper.Viper) []Host {
 		return nil
 	}
 
-	for h, _ := range sViper.GetStringMapString("hosts") {
+	for h := range sViper.GetStringMapString("hosts") {
 		fqdn := sViper.GetString("hosts." + h + ".fqdn")
 		ipAddr := sViper.GetString("hosts." + h + ".ipAddr")
 		pubKey := sViper.GetString("hosts." + h + ".pubKey")
@@ -79,7 +79,7 @@ func FormatHostSettingsFromFile(sViper *viper.Viper) []Host {
 
 	return hosts
 }
-func FormatTaskSettingsFromFile(sViper *viper.Viper) []Task {
+func FormatTaskSettingsFromFile(db *gorm.DB, sViper *viper.Viper) []Task {
 
 	var tasks []Task
 
@@ -88,7 +88,7 @@ func FormatTaskSettingsFromFile(sViper *viper.Viper) []Task {
 		return nil
 	}
 
-	for t, _ := range sViper.GetStringMapString("tasks") {
+	for t := range sViper.GetStringMapString("tasks") {
 
 		var logFile *string = nil
 
@@ -98,8 +98,8 @@ func FormatTaskSettingsFromFile(sViper *viper.Viper) []Task {
 		schedule := sViper.GetTime("tasks." + t + ".schedule")
 		persistSession := sViper.GetBool("tasks." + t + ".persistSession")
 
-		var resolvedGroups []string = ResolveGroupToHosts(sViper, groups)
-		hosts = append(hosts, resolvedGroups...) // Must unpack slice to append
+		var resolvedGroups []string = ResolveGroupToHosts(db, groups)
+		hosts = removeDuplicateStr(append(hosts, resolvedGroups...))
 
 		if sViper.GetBool("tasks." + t + ".logs.logging") {
 			logFilePath := sViper.GetString("tasks." + t + ".logs.logging.logFile")
@@ -122,30 +122,26 @@ func FormatTaskSettingsFromFile(sViper *viper.Viper) []Task {
 	return tasks
 }
 
+func ResolveGroupToHosts(db *gorm.DB, groups []string) []string {
+
+	var hosts []string
+	for _, group := range groups {
+		var groupHosts []HostModel
+		var expr string = "%" + group + "%"
+		db.Where("groups Like ?", expr).Find(&groupHosts)
+		for _, host := range groupHosts {
+			hosts = append(hosts, host.IpAddr)
+		}
+	}
+
+	return hosts
+}
+
 func Validate(sViper *viper.Viper) (bool, error) {
 
 	// Validate file
 
 	return true, nil
-}
-
-func ResolveGroupToHosts(sViper *viper.Viper, groups []string) []string {
-
-	var hostAddr []string
-	var hosts []Host = FormatHostSettingsFromFile(sViper)
-
-	for _, host := range hosts {
-		for _, group := range groups {
-			for _, hostGroup := range host.Groups {
-				if group == hostGroup {
-					hostAddr = append(hostAddr, host.IpAddr)
-					break
-				}
-			}
-		}
-	}
-
-	return hostAddr
 }
 
 func CreateInstructionList(sViper *viper.Viper, taskObj *Task, t string) []Instruction {
@@ -213,6 +209,18 @@ func CreateInstructionList(sViper *viper.Viper, taskObj *Task, t string) []Instr
 	}
 
 	return instructions
+}
+
+func removeDuplicateStr(strSlice []string) []string {
+	allKeys := make(map[string]bool)
+	var list []string
+	for _, item := range strSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
 }
 
 type Host struct {
