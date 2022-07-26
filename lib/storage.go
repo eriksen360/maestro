@@ -1,9 +1,11 @@
 package lib
 
 import (
+	"fmt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -12,25 +14,28 @@ type HostModel struct {
 	Fqdn   string
 	IpAddr string
 	PubKey string
-	Groups []string
-	Tasks  []Task // Each host has an array of tasks corresponding to it
+	Groups string
+	Tasks  []TaskModel `gorm:"foreignKey:TaskId"`
 }
 
 type TaskModel struct {
 	gorm.Model
+	TaskId         uint `gorm:"primarykey"`
 	TaskName       string
 	User           string
 	ScheduledAt    time.Time
 	PersistSession bool
 	LogFile        *string // Should be an io_util.file object instead
-	Instructions   []InstructionModel
+	InstructionID  int
+	Instructions   []InstructionModel `gorm:"foreignKey:InstructionId"`
 }
 
 type InstructionModel struct {
 	gorm.Model
+	InstructionId   uint `gorm:"primarykey"`
 	Name            string
 	InstructionType int32
-	Dependencies    []DependencyModel
+	Dependencies    []DependencyModel `gorm:"foreignKey:DependencyId"`
 	FileSrc         string
 	FileDst         string
 	Command         string
@@ -39,7 +44,7 @@ type InstructionModel struct {
 
 type DependencyModel struct {
 	gorm.Model
-	_Host           HostModel
+	DependencyId    uint `gorm:"primarykey"`
 	HostIpAddr      string
 	TaskName        string
 	InstructionName string
@@ -60,7 +65,7 @@ func Connect() *gorm.DB {
 		&DependencyModel{},
 	)
 	if err != nil {
-		log.Fatal("Could not migrate models", err)
+		log.Fatal(err)
 		return nil
 	}
 
@@ -69,11 +74,12 @@ func Connect() *gorm.DB {
 
 func SaveConfigurationFile(db *gorm.DB, hosts []Host, tasks []Task) {
 
+	var TaskExists bool = false
 	for _, host := range hosts {
 
 		var hm HostModel
-		result := db.Limit(1).Find(&hm, "ipAddr = ?", host.IpAddr)
-		if result.RowsAffected != 0 { // No entries found
+		result := db.Find(&hm, "ip_addr = ?", host.IpAddr)
+		if result.RowsAffected != 0 { // If existing host already configured
 			continue
 		}
 
@@ -81,36 +87,32 @@ func SaveConfigurationFile(db *gorm.DB, hosts []Host, tasks []Task) {
 			Fqdn:   host.Fqdn,
 			IpAddr: host.IpAddr,
 			PubKey: host.PubKey,
-			Groups: host.Groups,
+			Groups: strings.Join(host.Groups, ","),
 		}
 		db.Create(&hostModel)
 	}
 
-	// Dependencies er bundet op på instruktioner, og Instruktioner afhænger af tasks
 	for _, task := range tasks {
 
+		fmt.Println("\nTask: ", task.TaskName)
 		var instructionModels []InstructionModel
 		for _, inst := range task.Instructions {
 
+			fmt.Println("Instruction name: ", inst.Name)
 			var dependencyModels []DependencyModel
-			for _, dep := range inst.Dependencies {
+			for i, dep := range inst.Dependencies {
 
-				var hostModel HostModel
-				db.Find(&hostModel, "IpAddr = ? ", dep.HostIpAddr)
-
+				fmt.Println("Dependency number: ", i)
 				dependencyModel := DependencyModel{
-					_Host:           hostModel,
 					HostIpAddr:      dep.HostIpAddr,
 					TaskName:        dep.TaskName,
 					InstructionName: dep.InstructionName,
 				}
 
 				dependencyModels = append(dependencyModels, dependencyModel)
-				db.Create(&dependencyModel)
 			}
 
-			// Du er mongol. De hænger ikke nødvendigvis sammen jo
-
+			// Dependencies for a specific instruction are bound to that instruction
 			instructionModel := InstructionModel{
 				Name:            inst.Name,
 				InstructionType: inst.InstructionType,
@@ -121,7 +123,6 @@ func SaveConfigurationFile(db *gorm.DB, hosts []Host, tasks []Task) {
 				Retries:         inst.Retries,
 			}
 			instructionModels = append(instructionModels, instructionModel)
-			db.Create(&instructionModel)
 		}
 
 		taskModel := TaskModel{
@@ -133,27 +134,28 @@ func SaveConfigurationFile(db *gorm.DB, hosts []Host, tasks []Task) {
 			Instructions:   instructionModels,
 		}
 
-		for host := range task.Hosts {
+		// Couple Task and Host to create unique pair
+		for _, hostIpAddr := range task.Hosts {
+
 			var hm HostModel
-			result := db.Limit(1).Find(&hm, "ipAddr = ?", host.IpAddr)
-			if result.RowsAffected == 0 {
+			result := db.Find(&hm, "ip_addr = ?", hostIpAddr)
+			if result.RowsAffected != 0 {
 
-				// Create host?
-			} else {
-
-				if task not in hm.Tasks {
-				db.Update(&hm, append(hm.Tasks, task))
-				} else {
-					// task already found. Error
+				for _, existingTask := range hm.Tasks {
+					if existingTask.TaskName == task.TaskName {
+						TaskExists = true
+					}
 				}
-
+				if TaskExists {
+					fmt.Printf("Task %v already exists for host %v",
+						task.TaskName, hostIpAddr)
+				} else {
+					hm.Tasks = append(hm.Tasks, taskModel)
+					db.Save(&hm)
+				}
+			} else {
+				fmt.Printf("Configuration for host %v not found", hostIpAddr)
 			}
-
 		}
-
-		// Opret task med []InstructionModel
-		// For hver host i task.Hosts -> tilføj task som FK hvis task.TaskName ikke allerede
-		// findes for host
-
 	}
 }
