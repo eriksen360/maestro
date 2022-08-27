@@ -1,0 +1,23 @@
+# $ maestro play <play_conf.yaml> [options]
+# A play is the actual execution which brings together hosts and tasks, and runs them based on a set of rules
+# When executing a play the executor fetches and manages the session context of the job on the target host(s)
+
+
+
+play:
+  play1:
+    # schedule: <relative_time | absolute_time>
+    steps:
+      - task: "xyz"
+        hosts: ["abc", "def"] # run task concurrently on hosts
+        groups: ["group1", "group2"]
+      - command: "build ./ert" # command and task are mutually exclusive
+        hosts: ["abc"]
+        # depends_on:
+          # - task: "123"
+          #    host: ["uio", "jkl"]
+
+  play2:
+    steps:
+      - hosts: []
+        task:

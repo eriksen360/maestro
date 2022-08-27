@@ -1,0 +1,33 @@
+# BEWARE: Viper cannot handle camelCasing or UpperCasing
+# $ maestro read score <score_conf.yaml> [options]
+# A score configuration is a static declaration of hosts and tasks related to hosts which can be configured,
+# updated and saved asynchrosnly to the execution of tasks.
+
+hosts:
+  server1:
+    fqdn: "localhost.meriksen"
+    ipaddr: "123.123.123.123"
+    pubkey: "my_key_file.pub"
+    groups: ["1", "2"]
+  server2:
+    fqdn: "localhost.meriksen"
+    ipaddr: "122.122.122.122"
+    pubkey: "my_key_file.pub"
+    groups: ["1", "2"]
+
+tasks:
+  update_db:
+    user: "root"
+    hosts: ["123.123.123.123", "122.122.122.122"]
+    instructions:
+      - name: instruction1
+        command: "cd ~"
+      - name: instruction2
+        command: "ls -la"
+
+  update_web:
+    user: "meriksen"
+    hosts: [ "123.123.123.123" ]
+    instructions:
+      - name: instruction1
+        command: "cd repo && docker-compose up -d"
