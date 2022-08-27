@@ -1,2 +1,5 @@
 # SQLite
 *.db
+
+# GoLand
+.idea
